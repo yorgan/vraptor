@@ -29,9 +29,8 @@ package br.com.caelum.vraptor.validator;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import br.com.caelum.vraptor.Result;
 import br.com.caelum.vraptor.Validator;
@@ -56,21 +55,18 @@ public class DefaultValidator implements Validator {
     private Object[] argsToUse;
     private Method method;
     private Class<?> typeToUse;
-	private final HttpServletRequest request;
 
 	private final List<Message> errors = new ArrayList<Message>();
 
-    public DefaultValidator(Proxifier proxifier, Result result, HttpServletRequest request) {
+    public DefaultValidator(Proxifier proxifier, Result result) {
         this.proxifier = proxifier;
         this.result = result;
-		this.request = request;
     }
 
     // TODO: do not use String consequences anymore
     // TODO: on error action should be defined by the onError method
     public void checking(Validations validations) {
         this.errors.addAll(validations.getErrors());
-        validate();
     }
 
     public Validator onError() {
@@ -86,6 +82,7 @@ public class DefaultValidator implements Validator {
                     DefaultValidator.this.argsToUse = args;
                     DefaultValidator.this.method = method;
                 }
+                validate();
                 return null;
             }
         });
@@ -94,9 +91,14 @@ public class DefaultValidator implements Validator {
 	public void add(Message message) {
 		this.errors.add(message);
 	}
+	
+	public void add(Collection<? extends Message> message) {
+		this.errors.addAll(message);
+	}
 
-	public void validate() {
-        if (!errors.isEmpty()) {
+	// runs the validation
+	private void validate() {
+        if (hasErrors()) {
             result.include("errors", errors);
             if (method != null) {
                 Object instance = result.use(Results.logic()).forwardTo(typeToUse);
@@ -112,6 +114,10 @@ public class DefaultValidator implements Validator {
             // finished just fine
             throw new ValidationError(errors);
         }
+	}
+
+	public boolean hasErrors() {
+		return !errors.isEmpty();
 	}
 
 //	private String uriWithoutContextPath() {

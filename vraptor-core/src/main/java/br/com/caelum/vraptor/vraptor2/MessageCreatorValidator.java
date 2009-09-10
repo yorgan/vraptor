@@ -29,6 +29,7 @@ package br.com.caelum.vraptor.vraptor2;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -134,4 +135,13 @@ public class MessageCreatorValidator implements Validator {
         }
 	}
 
+	public void add(Collection<? extends Message> messages) {
+		for (Message message : messages) {
+			this.add(message);
+		}
+	}
+
+	public boolean hasErrors() {
+		return containsErrors;
+	}
 }
